@@ -4,11 +4,11 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
-import torch.optim as optim
+import torch.optim as optim       #.optim是神经网络优化器，pytorch提供optim来优化网络，是一个实现多种优化算法的包
 import numpy as np
 import cv2
 from collections import namedtuple
-from torch.optim.lr_scheduler import ExponentialLR
+from torch.optim.lr_scheduler import ExponentialLR #Torch学习率调整策略通过torch.optim.lr_scheduler实现，ExponentialLR表示指数衰减调整学习率
 
 from got10k.trackers import Tracker
 
@@ -55,22 +55,24 @@ class SiamFC(nn.Module):
 
     def forward(self, z, z_noise, x, x_noise):
 
+      #模板分支的融合
         z = self.feature1(z)
         z_noise = self.feature2(z_noise)
-        z = torch.add(z, z_noise)
-        z = self.feature3(z)
+        z = torch.add(z, z_noise)            #前面两个feature map相加融合
+        z = self.feature3(z)             #融合后继续通过CNN得到feature map
 
+        #搜索分支的融合
         x = self.feature1(x)
         x_noise = self.feature2(x_noise)
         x = torch.add(x, x_noise)
         x = self.feature3(x)
 
         # fast cross correlation
-        out = self.fast_cross(x, z, "out", 0.1)
+        out = self.fast_cross(x, z, "out", 0.1)   #相关操作，输出score map
         #out = torch.add(cross4, out)
 
         # adjust the scale of responses
-        out = 0.001 * out + 0.0
+        out = 0.001 * out + 0.0         #调整输出score map的size
 
         return out
 
